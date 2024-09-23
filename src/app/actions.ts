@@ -1,16 +1,22 @@
 'use server'
 
-import { deleteUser } from "@/data-access/users";
-import { getSession } from "@/lib/auth";
+import { deleteUser, setEmailVerified } from "@/data-access/users";
+import { validateRequest } from "@/lib/validate-request";
+
 
 export async function deleteAccountAction() {
     
-    const session = await getSession();
+    
+    const { user } = await validateRequest();
 
-    if (!session) {
+    if (!setEmailVerified) {
         throw new Error("you must be logged in to delete your account");
     }
 
-    await deleteUser(session.user.id);
+    if (!user) {
+        throw new Error("you must be logged in to delete your account");
+    }
+
+    await deleteUser(user.id);
 
 }

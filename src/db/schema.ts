@@ -1,84 +1,90 @@
-import {
-    boolean,
-    timestamp,
-    pgTable,
-    text,
-    primaryKey,
-        integer,
-        uuid,
-    } from "drizzle-orm/pg-core"
-    import postgres from "postgres"
-    import { drizzle } from "drizzle-orm/postgres-js"
-    import type { AdapterAccountType } from "@auth/core/adapters"
-import { sql } from "drizzle-orm"
+import pg from "pg";
+import { bigint, bigserial, integer, pgTableCreator, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { sql } from "drizzle-orm";
+
+const pool = new pg.Pool();
+const db = drizzle(pool);
+
+export const accountTypeEnum = ["email", "google", "github"] as const;
+
+const pgTable = pgTableCreator((name) => `app_${name}`);
+
+export const users = pgTable("user", {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    email: text("email").unique(),
+    emailVerified: timestamp("email_verified", { mode: "date" }),
+});
+
+export const accounts = pgTable("accounts", {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    userId: bigint("user_id", { mode: "number" })
+        .references(() => users.id, { onDelete: "cascade" })
+        .unique()
+        .notNull(),
+    accountType: text("account_type", { enum: accountTypeEnum }).notNull(),
+    githubId: text("github_id").unique(),
+    googleId: text("google_id").unique(),
+    password: text("password"),
+    salt: text("salt"),
+});
+
+export const magicLinks = pgTable("magic_links", {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    email: text("email").notNull().unique(),
+    token: text("token"),
+    tokenExpiresAt: timestamp("token_expires_at", { mode: "date" }).notNull(),
+});
+
+export const resetTokens = pgTable("reset_tokens", {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    userId: bigint("user_id", { mode: "number" })
+        .references(() => users.id, { onDelete: "cascade" })
+        .unique()
+        .notNull(),
+    token: text("token"),
+    tokenExpiresAt: timestamp("token_expires_at", { mode: "date" }).notNull(),
+});
+
+export const verifyEmailTokens = pgTable("verify_email_tokens", {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    userId: bigint("user_id", { mode: "number" })
+        .references(() => users.id, { onDelete: "cascade" })
+        .unique()
+        .notNull(),
+    token: text("token"),
+    tokenExpiresAt: timestamp("token_expires_at", { mode: "date" }).notNull(),
+    });
+
+export const profiles = pgTable("profile", {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    userId: bigint("user_id", { mode: "number" })
+        .references(() => users.id, { onDelete: "cascade" })
+        .unique()
+        .notNull(),
+    displayName: text("display_name"),
+    imageId: text("image_id"),
+    image: text("image"),
+    bio: text("bio").notNull().default(""),
+});
     
-    const connectionString = "postgres://postgres:postgres@localhost:5432/drizzle"
-    const pool = postgres(connectionString, { max: 1 })
-    
-    export const db = drizzle(pool)
-    
-    export const users = pgTable("user", {
-        id: text("id")
-        .primaryKey()
-        .$defaultFn(() => crypto.randomUUID()),
-        name: text("name"),
-        email: text("email").notNull(),
-        emailVerified: timestamp("emailVerified", { mode: "date" }),
-        image: text("image"),
-    })
-    
-    export const accounts = pgTable(
-        "account",
-        {
-        userId: text("userId")
-            .notNull()
-            .references(() => users.id, { onDelete: "cascade" }),
-        type: text("type").$type<AdapterAccountType>().notNull(),
-        provider: text("provider").notNull(),
-        providerAccountId: text("providerAccountId").notNull(),
-        refresh_token: text("refresh_token"),
-        access_token: text("access_token"),
-        expires_at: integer("expires_at"),
-        token_type: text("token_type"),
-        scope: text("scope"),
-        id_token: text("id_token"),
-        session_state: text("session_state"),
-        },
-        (account) => ({
-        compoundKey: primaryKey({
-            columns: [account.provider, account.providerAccountId],
-        }),
+export const sessions = pgTable("session", {
+    id: text("id").primaryKey(),
+    userId: bigint("user_id", { mode: "number" })
+        .references(() => users.id, {
+        onDelete: "cascade",
         })
-    )
-    
-    export const sessions = pgTable("session", {
-        sessionToken: text("sessionToken").primaryKey(),
-        userId: text("userId")
-        .notNull()
-        .references(() => users.id, { onDelete: "cascade" }),
-        expires: timestamp("expires", { mode: "date" }).notNull(),
-    })
-    
-    export const verificationTokens = pgTable(
-        "verificationToken",
-        {
-        identifier: text("identifier").notNull(),
-        token: text("token").notNull(),
-        expires: timestamp("expires", { mode: "date" }).notNull(),
-        },
-        (verificationToken) => ({
-        compositePk: primaryKey({
-            columns: [verificationToken.identifier, verificationToken.token],
-        }),
-        })
-    )
-    
+        .notNull(),
+    expiresAt: timestamp("expires_at", { mode: "date" }).notNull(),
+});
+
+
     export const room = pgTable("room", {
         id: uuid("id")
             .default(sql`gen_random_uuid()`)
             .notNull()
             .primaryKey(),
-        userId: text("userId")
+        userId: bigint("user_id", { mode: "number" })
             .notNull()
             .references(() => users.id, { onDelete: "cascade" }),
         name: text("name").notNull(),
@@ -89,24 +95,5 @@ import { sql } from "drizzle-orm"
     })
 
     export type Room = typeof room.$inferSelect;
-
-    // export const authenticators = pgTable(
-    //     "authenticator",
-    //     {
-    //     credentialID: text("credentialID").notNull().unique(),
-    //     userId: text("userId")
-    //         .notNull()
-    //         .references(() => users.id, { onDelete: "cascade" }),
-    //     providerAccountId: text("providerAccountId").notNull(),
-    //     credentialPublicKey: text("credentialPublicKey").notNull(),
-    //     counter: integer("counter").notNull(),
-    //     credentialDeviceType: text("credentialDeviceType").notNull(),
-    //     credentialBackedUp: boolean("credentialBackedUp").notNull(),
-    //     transports: text("transports"),
-    //     },
-    //     (authenticator) => ({
-    //     compositePK: primaryKey({
-    //         columns: [authenticator.userId, authenticator.credentialID],
-    //     }),
-    //     })
-    // )
+    export type User = typeof users.$inferSelect;
+    export type Profile = typeof profiles.$inferSelect;

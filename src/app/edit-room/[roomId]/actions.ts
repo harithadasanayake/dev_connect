@@ -2,13 +2,14 @@
 
 import { editRoom, getRoom } from "@/data-access/rooms";
 import { Room } from "@/db/schema";
-import { getSession } from "@/lib/auth";
+import { validateRequest } from "@/lib/validate-request";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 
 export async function editRoomAction(roomData: Omit<Room, "userId">) {
-    const session = await getSession();
+    
+    const { session } = await validateRequest();
 
     if (!session) {
         throw new Error("you must be logged in to edit this room");
@@ -16,7 +17,7 @@ export async function editRoomAction(roomData: Omit<Room, "userId">) {
 
     const room = await getRoom(roomData.id);
 
-    if (room?.userId !== session.user.id) {
+    if (room?.userId !== session.userId) {
         throw new Error("User not authorized");
     }
 

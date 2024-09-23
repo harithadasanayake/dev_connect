@@ -3,17 +3,19 @@ import { GithubIcon } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge"
 import { TagsList } from "@/components/tags-list";
-import { DevConnectVideo } from "./video-player";
 import { splitTags } from "@/lib/utils";
 import { unstable_noStore } from "next/cache";
+import { DevConnectVideo } from "./video-player";
+import { getProfile } from "@/data-access/profiles";
 
 
 
-export default async function RoomPage(props: {params: {roomId: string} }){
+export default async function RoomPage(props: {params: {roomId: string}}) {
     unstable_noStore();
     const roomId = props.params.roomId;
-    
+
     const room = await getRoom(roomId);
+
 
     if (!room) {
         return <div>No room of this ID found</div>;
@@ -23,7 +25,7 @@ export default async function RoomPage(props: {params: {roomId: string} }){
         <div className="grid grid-cols-4 min-h-screen">
             <div className="col-span-3 p-4 pr-2">
                 <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
-                    <DevConnectVideo room={room} />
+                    <DevConnectVideo room={room}/>
                 </div>
             </div>
             <div className="col-span-1 p-4 pl-2">

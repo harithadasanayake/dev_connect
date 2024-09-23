@@ -1,7 +1,12 @@
+import { getCurrentUser } from "@/lib/session";
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+    const user = await getCurrentUser();
+    if (user) redirect("/browse");
+
     return (
     <div className="">
         <div className="relative isolate px-6 pt-14 lg:px-8">
@@ -36,7 +41,7 @@ export default function LandingPage() {
             </p>
             <div className="mt-10 flex items-center justify-center gap-x-6">
                 <Link
-                href="/browse"
+                href="/sign-in"
                 className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
                 >
                 Get started

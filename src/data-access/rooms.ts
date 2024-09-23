@@ -1,6 +1,7 @@
+
 import { db } from "@/db";
 import { Room, room } from "@/db/schema";
-import { getSession } from "@/lib/auth";
+import { validateRequest } from "@/lib/auth";
 import { eq, like } from "drizzle-orm";
 
 
@@ -13,12 +14,12 @@ export async function getRooms(search: string | undefined) {
 }
 
 export async function getUserRooms() {
-    const session = await getSession()
+    const { session } = await validateRequest();
     if (!session) {
         throw new Error("User not authenticated");
     }
     const rooms = await db.query.room.findMany({
-        where: eq(room.userId, session.user.id),
+        where: eq(room.userId, session.userId),
     });
     return rooms;
 }
@@ -34,7 +35,7 @@ export async function deleteRoom(roomId: string) {
     await db.delete(room).where(eq(room.id, roomId));
 }
 
-export async function createRoom(roomData: Omit<Room, "id" | "userId">, userId: string) {
+export async function createRoom(roomData: Omit<Room, "id" | "userId">, userId: number) {
     const inserted = await db.insert(room).values({...roomData, userId}).returning();
     return inserted[0];
 }

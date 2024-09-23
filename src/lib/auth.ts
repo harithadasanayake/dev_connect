@@ -1,61 +1,82 @@
+
 import { db } from "@/db";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { AuthOptions, DefaultSession, getServerSession } from "next-auth";
-import { Adapter } from "next-auth/adapters";
-import Google from "next-auth/providers/google";
+import { sessions, users } from "@/db/schema";
+import { DrizzlePostgreSQLAdapter } from "@lucia-auth/adapter-drizzle";
+import { Lucia, Session, User } from "lucia";
+import { GitHub, Google } from "arctic";
+import { cookies } from "next/headers";
+import { env } from "@/env";
+import { UserId as CustomUserId } from "@/types";
 
-declare module "next-auth" {
-    interface Session extends DefaultSession {
-        user: {
-            id: string;
-        } & DefaultSession["user"];
+const adapter = new DrizzlePostgreSQLAdapter(db, sessions, users);
+ // your adapter
+
+export const lucia = new Lucia(adapter, {
+	sessionCookie: {
+	expires: false,
+	attributes: {
+	secure: process.env.NODE_ENV === "production",
+	},
+	},
+	getUserAttributes: (attributes) => {
+		return {
+		id: attributes.id,
+		};
+	},
+});
+
+export const validateRequest = async (): Promise<
+	{ user: User; session: Session } | { user: null; session: null }
+> => {
+	const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
+	if (!sessionId) {
+		return {
+			user: null,
+			session: null,
+		};
+}
+
+const result = await lucia.validateSession(sessionId);
+
+  // next.js throws when you attempt to set cookie when rendering page
+try {
+    if (result.session && result.session.fresh) {
+		const sessionCookie = lucia.createSessionCookie(result.session.id);
+		cookies().set(
+			sessionCookie.name,
+			sessionCookie.value,
+			sessionCookie.attributes
+		);
     }
+    if (!result.session) {
+		const sessionCookie = lucia.createBlankSessionCookie();
+		cookies().set(
+			sessionCookie.name,
+			sessionCookie.value,
+			sessionCookie.attributes
+		);
+    }
+} catch {}
+return result;
+};
+
+declare module "lucia" {
+	interface Register {
+		Lucia: typeof lucia;
+		DatabaseUserAttributes: {
+			id: CustomUserId;
+    };
+    UserId: CustomUserId;
+	}
 }
 
-export const authConfig = {
+export const github = new GitHub(
+	env.GITHUB_CLIENT_ID,
+	env.GITHUB_CLIENT_SECRET
+);
 
-    adapter: DrizzleAdapter(db) as Adapter, 
-    session: { 
-        strategy: "jwt",
-    },
-    providers: [
-        Google({
-            clientId: process.env.GOOGLE_CLIENT_ID!,
-            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-        }) 
-    ],
-    callbacks: {
-        async jwt({ token, user }) {
-            const dbUser = await db.query.users.findFirst({
-            where: (users, { eq }) => eq(users.email, token.email!),
-            });
-    
-            if (!dbUser) {
-                throw new Error("no user with email found");
-            }
-    
-            return {
-                id: dbUser.id,
-                name: dbUser.name,
-                email: dbUser.email,
-                picture: dbUser.image,
-            };
-        },
-            async session({ token, session }) {
-            if (token) {
-                session.user = {
-                id: token.id as string,
-                name: token.name,
-                email: token.email,
-                image: token.picture,
-                };
-            }
-        
-            return session;
-            },
-        },
-}satisfies AuthOptions;
-
-export function getSession(){
-    return getServerSession(authConfig);
-}
+export const googleAuth = new Google(
+	env.GOOGLE_CLIENT_ID,
+	env.GOOGLE_CLIENT_SECRET,
+	`${env.HOST_NAME}/api/login/google/callback`
+);

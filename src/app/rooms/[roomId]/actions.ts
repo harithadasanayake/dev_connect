@@ -1,10 +1,12 @@
-"use server"
+"use server";
 
-import { getSession } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/session";
+import { validateRequest } from "@/lib/validate-request";
 import { StreamChat } from "stream-chat";
 
 export async function generateTokenAction() {
-    const session = await getSession();
+
+    const { session } = await validateRequest();
 
     if (!session) {
         throw new Error("No session found");
@@ -16,7 +18,9 @@ export async function generateTokenAction() {
 
     // Initialize a Server Client
     const serverClient = StreamChat.getInstance( api_key, api_secret);
+
+    const userId = String(session.userId);
     // Create User Token
-    const token = serverClient.createToken(session.user.id);
+    const token = serverClient.createToken(userId);
     return token;
 }
