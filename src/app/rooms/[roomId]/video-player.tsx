@@ -18,6 +18,7 @@ import { cache, useEffect, useState } from 'react';
 
 import { generateTokenAction } from "./actions";
 import { useRouter } from "next/navigation";
+import { getProfile } from "@/data-access/profiles";
 
 const apiKey = process.env.NEXT_PUBLIC_GET_STREAM_API_KEY!;
 
@@ -29,27 +30,28 @@ const apiKey = process.env.NEXT_PUBLIC_GET_STREAM_API_KEY!;
 
 // }
 
-export function DevConnectVideo({ room}: { room: Room }) {
+export function DevConnectVideo({ room, profile }: { room: Room; profile: Profile }) {
     
     const [client, setClient] = useState<StreamVideoClient | null>(null);
     const [call, setCall] = useState<Call | null >(null);
     const router = useRouter();
     
+  
+
     useEffect(() => {
         
-        if (!room) {
+        if (!room || !profile) {
             return;
         }
-        // if (!profile){
-        //     return;
-        // }
-        const userId = String(room.userId);
+        
+        const userId = String(profile.userId);
+        
         const client = new StreamVideoClient({ 
             apiKey, 
             user: {
                 id: userId,
-                // name: profile.displayName ?? undefined,
-                // image: profile.image ?? undefined,
+                name: profile.displayName ?? undefined,
+                image: profile.image ?? undefined,
             }, 
             tokenProvider: () => generateTokenAction(),
         });
@@ -66,7 +68,7 @@ export function DevConnectVideo({ room}: { room: Room }) {
                 .then(() => client.disconnectUser())
                 .catch(console.error);
         };
-    }, [ room]);
+    }, [ room, profile]);
 
     return (
         client &&
