@@ -11,7 +11,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LayoutDashboard, Lightbulb, Loader2Icon, LogOut } from "lucide-react";
+import { LayoutDashboard, Loader2Icon, LogOut } from "lucide-react";
 import { getUserProfileUseCase } from "@/use-cases/users";
 import { UserId } from "@/types";
 import { ModeToggle } from "./mode-toggle";
@@ -24,7 +24,7 @@ export async function Header() {
 const user = await getCurrentUser();
 
 return (
-<div className="border-b py-4">
+<div className="border-b py-4 fixed top-0 left-0 right-0 z-50 shadow-md">
     <div className="container mx-auto flex justify-between items-center">
     <div className="flex gap-8 items-center">
         <Link href="/" className="flex gap-2 items-center text-xl">
@@ -44,8 +44,8 @@ return (
             asChild
             className="flex items-center justify-center gap-2"
             >
-            <Link href={"/dashboard"}>
-                <LayoutDashboard className="w-4 h-4" /> Dashboard
+            <Link href={"/profile"}>
+                <LayoutDashboard className="w-4 h-4" /> Profile
             </Link>
             </Button>
         )}

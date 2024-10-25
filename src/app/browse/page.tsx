@@ -5,6 +5,8 @@ import { SearchBar } from "./search-bar";
 import { RoomCard } from "./room-card";
 import { unstable_noStore } from "next/cache";
 import Image from "next/image";
+import { getProfile } from "@/data-access/profiles";
+import { getCurrentUser } from "@/lib/session";
 
 
 export default async function Home({
@@ -17,8 +19,20 @@ export default async function Home({
   unstable_noStore();
   const rooms = await getRooms(searchParams.search);
 
+  const user = await getCurrentUser();
+    
+    if(!user) {
+        return <div>Not authenticated</div>;
+    }
+
+    const profile = await getProfile(user.id);
+
+    if (!profile) {
+        return <div>No profile of this ID found</div>;
+    }
+
   return (
-    <main className="min-h-screen justify-between p-16">
+    <main className="min-h-screen justify-between p-16 pt-40">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl">Find Dev Rooms</h1>
         <Button asChild>
@@ -31,7 +45,7 @@ export default async function Home({
       
       <div className="grid grid-cols-3 gap-4">
         {rooms.map((room) => {
-          return <RoomCard key={room.id} room={room}/>;
+          return <RoomCard key={room.id} room={room} profile={profile}/>;
         })}
       </div>
       {rooms.length === 0 && (

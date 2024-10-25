@@ -23,7 +23,6 @@ export default async function RoomPage(props: {params: {roomId: string}}) {
 
     const user = await getCurrentUser();
     
-    
     if(!user) {
         return <div>Not authenticated</div>;
     }
@@ -34,9 +33,8 @@ export default async function RoomPage(props: {params: {roomId: string}}) {
         return <div>No profile of this ID found</div>;
     }
 
-
     return (    
-        <div className="grid grid-cols-4 min-h-screen">
+        <div className="grid grid-cols-4 min-h-screen pt-28">
             <div className="col-span-3 p-4 pr-2">
                 <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-4">
                     <DevConnectVideo room={room} profile={profile} />

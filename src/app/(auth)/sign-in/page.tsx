@@ -10,7 +10,7 @@ import { MagicLinkForm } from "./magic-link-form";
 
 export default function SignInPage() {
   return (
-    <div className="py-24 flex min-h-[80dvh] items-center justify-center mx-auto">
+    <div className="py-40 flex min-h-[80dvh] items-center justify-center mx-auto">
       <div className="mx-auto max-w-md space-y-6">
         <div className="space-y-2 text-center">
           <h1 className="text-3xl font-bold">Sign In</h1>

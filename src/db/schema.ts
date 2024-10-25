@@ -79,21 +79,35 @@ export const sessions = pgTable("session", {
 });
 
 
-    export const room = pgTable("room", {
-        id: uuid("id")
-            .default(sql`gen_random_uuid()`)
-            .notNull()
-            .primaryKey(),
-        userId: bigint("user_id", { mode: "number" })
-            .notNull()
-            .references(() => users.id, { onDelete: "cascade" }),
-        name: text("name").notNull(),
-        description: text("description"),
-        tags: text("tags").notNull(),
-        githubRepo: text("githubRepo"),
+export const room = pgTable("room", {
+    id: uuid("id")
+        .default(sql`gen_random_uuid()`)
+        .notNull()
+        .primaryKey(),
+    userId: bigint("user_id", { mode: "number" })
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    tags: text("tags").notNull(),
+    githubRepo: text("githubRepo"),
 
-    })
+});
+
+export const reviews = pgTable('reviews', {
+    id: bigserial("id", { mode: "number" }).primaryKey(),
+    roomId: uuid("room_id")
+        .notNull()
+        .references(() => room.id, { onDelete: "cascade" }),
+    userId: bigint("user_id", { mode: "number" })
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    rating: integer("rating"),
+    review: text("review"),
+    createdAt: timestamp("createdAt").defaultNow(),
+});
 
     export type Room = typeof room.$inferSelect;
     export type User = typeof users.$inferSelect;
     export type Profile = typeof profiles.$inferSelect;
+    export type Review = typeof reviews.$inferSelect;

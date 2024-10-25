@@ -10,7 +10,7 @@ export default async function YourRoomsPage() {
     const rooms = await getUserRooms();
 
     return (
-        <main className="min-h-screen justify-between p-16">
+        <main className="min-h-screen justify-between p-16 pt-40">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-4xl">Your Rooms</h1>
                 <Button asChild>
