@@ -17,14 +17,18 @@ import { UserId } from "@/types";
 import { ModeToggle } from "./mode-toggle";
 import { MenuButton } from "./menu-button";
 import Image from "next/image";
+import { getProfile } from "@/data-access/profiles";
 
 const profilerLoader = cache(getUserProfileUseCase);
 
 export async function Header() {
 const user = await getCurrentUser();
 
+const profile = user ? await getProfile(user.id) : null;
+
+
 return (
-<div className="border-b py-4 fixed top-0 left-0 right-0 z-50 shadow-md">
+<div className="border-b py-4 fixed top-0 left-0 right-0 z-50 shadow-md bg-gray-100 dark:bg-gray-900">
     <div className="container mx-auto flex justify-between items-center">
     <div className="flex gap-8 items-center">
         <Link href="/" className="flex gap-2 items-center text-xl">
@@ -44,7 +48,7 @@ return (
             asChild
             className="flex items-center justify-center gap-2"
             >
-            <Link href={"/profile"}>
+            <Link href={`/profile/${profile?.id}`}>
                 <LayoutDashboard className="w-4 h-4" /> Profile
             </Link>
             </Button>

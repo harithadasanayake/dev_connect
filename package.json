@@ -29,6 +29,7 @@
     "clsx": "^2.1.1",
     "cookies-next": "^4.2.1",
     "drizzle-orm": "^0.31.4",
+    "formidable": "^3.5.2",
     "lucia": "^3.2.0",
     "lucia-auth": "^1.8.0",
     "lucide-react": "^0.403.0",
@@ -53,6 +54,7 @@
   },
   "devDependencies": {
     "@hookform/resolvers": "^3.9.0",
+    "@types/formidable": "^3.4.5",
     "@types/node": "^20.14.10",
     "@types/pg": "^8.11.6",
     "@types/react": "^18.3.3",

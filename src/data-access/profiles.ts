@@ -37,3 +37,15 @@ export async function getProfile(userId: UserId) {
 
   return profile;
 }
+
+export async function editprofile(profileData: Profile) {
+  const updated = await db.update(profiles).set(profileData).where(eq(profiles.id, profileData.id)).returning();
+  return updated[0];
+}
+
+export async function getUserProfile(profileId: Number) {
+  const profile = await db.query.profiles.findFirst({
+    where: eq(profiles.id, Number(profileId)),
+  });
+
+}
