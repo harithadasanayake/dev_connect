@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { SessionProvider } from "@/providers/Session.provider";
 import { validateRequest } from "@/lib/validate-request";
 import { Providers } from "./provider";
+import Footer from "@/components/Footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -30,6 +31,7 @@ export default async function RootLayout({
             <NextTopLoader />
               <Header />
               <div className="container mx-auto">{children}</div>
+              <Footer />
           </Providers>
         </SessionProvider>    
         

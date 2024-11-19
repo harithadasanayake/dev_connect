@@ -54,7 +54,7 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="py-24 mx-auto max-w-[400px] space-y-6">
+    <div className="min-h-screen justify-between py-24 mx-auto max-w-[400px] space-y-6 pt-40">
       <h1 className={cn(pageTitleStyles, "text-center")}>Forgot Password</h1>
 
       {isSuccess && (

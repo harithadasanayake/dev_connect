@@ -1,7 +1,8 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import formidable, { File, Fields, Files } from 'formidable';
+import { Readable } from 'stream';
+import formidable from 'formidable';
 
 export const config = {
   api: {
@@ -14,27 +15,40 @@ if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-export async function POST(req: NextApiRequest, res: NextApiResponse) {
-  const form = formidable({
-    uploadDir,
-    keepExtensions: true,
-  });
+export async function POST(req: Request) {
+  try {
+    // Convert the Request body to a Node.js-readable stream
+    const body = await req.arrayBuffer();
+    const nodeStream = Readable.from(Buffer.from(body));
 
-  form.parse(req, (err: any, fields: Fields, files: Files) => {
-    if (err) {
-      res.status(500).json({ error: 'Error parsing the files' });
-      return;
-    }
+    // Simulate a Node.js IncomingMessage object
+    const headers = Object.fromEntries(req.headers.entries());
+    const simulatedRequest = Object.assign(nodeStream, { headers });
+
+    const form = formidable({
+      uploadDir,
+      keepExtensions: true,
+    });
+
+    // Parse the form using the simulated Node.js request
+    const files: any = await new Promise((resolve, reject) => {
+      form.parse(simulatedRequest as any, (err, fields, files) => {
+        if (err) reject(err);
+        else resolve(files);
+      });
+    });
 
     const fileArray = Array.isArray(files.file) ? files.file : [files.file];
     if (!fileArray || fileArray.length === 0) {
-      res.status(400).json({ error: 'No file uploaded' });
-      return;
+      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    const file = fileArray[0] as File;
+    const file = fileArray[0];
     const filePath = path.join('/uploads', path.basename(file.filepath));
 
-    res.status(200).json({ filePath });
-  });
+    return NextResponse.json({ filePath });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: 'Error processing the file upload' }, { status: 500 });
+  }
 }

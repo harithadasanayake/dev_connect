@@ -13,7 +13,7 @@ export default function SignedOutPage() {
   }, [router]);
 
   return (
-    <div className="py-24 mx-auto max-w-[400px] space-y-6 pt-40">
+    <div className="min-h-screen justify-between py-24 mx-auto max-w-[400px] space-y-6 pt-40">
       <h1 className={pageTitleStyles}>Successfully Signed Out</h1>
       <p className="text-xl">
         You have been successfully signed out. You can now sign in to your
